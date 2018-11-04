@@ -2,7 +2,7 @@
 Window for holding Graphs
 '''
 import sys
-from PyQt4 import QtGui
+from PyQt5 import QtGui, QtWidgets
 import GUIConfig
 from GraphWidgetPyQtGraph import Graph_PyQtGraph as Graph
 from HistWidgetPyQtGraph import Hist_PyQtGraph as Hist
@@ -10,7 +10,7 @@ from ScrollingGraphWidgetPyQtGraph import ScrollingGraph_PyQtGraph as ScrollingG
 from ImageWidget import imageWidget as ImageGraph
 from GridGraphWindow import GridGraphWindow
 
-class GraphWindow(QtGui.QTabWidget):
+class GraphWindow(QtWidgets.QTabWidget):
     def __init__(self, reactor, cxn = None, parent=None):
         super(GraphWindow, self).__init__(parent)
         self.cxn = cxn
@@ -60,13 +60,3 @@ class GraphWindow(QtGui.QTabWidget):
         
     def closeEvent(self, x):
         self.reactor.stop()
-
-if __name__ == '__main__':
-    app = QtGui.QApplication(sys.argv)
-    import qt4reactor
-    qt4reactor.install()
-    from twisted.internet import reactor
-    main = GraphWindow(reactor)
-    main.show()
-    #sys.exit(app.exec_())
-    reactor.run()

@@ -1,12 +1,12 @@
 import sys
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtCore, QtWidgets
 import pyqtgraph as pg
 from TraceListWidget import TraceList
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.internet.task import LoopingCall
 import itertools
 from Dataset import Dataset
-import Queue
+import queue
 
 import numpy as np
 from numpy import random
@@ -21,7 +21,7 @@ class artistParameters():
                              # only redraw if the dataset has a higher
                              # update count
 
-class Graph_PyQtGraph(QtGui.QWidget):
+class Graph_PyQtGraph(QtWidgets.QWidget):
     def __init__(self, config, reactor, cxn = None, parent=None):
         super(Graph_PyQtGraph, self).__init__(parent)
         from labrad.units import WithUnit as U
@@ -40,7 +40,7 @@ class Graph_PyQtGraph(QtGui.QWidget):
         self.grid_on = config.grid_on
         self.scatter_plot = config.scatter_plot
 
-        self.dataset_queue = Queue.Queue(config.max_datasets)
+        self.dataset_queue = queue.Queue(config.max_datasets)
 
         self.live_update_loop = LoopingCall(self.update_figure)
         self.live_update_loop.start(0)
@@ -90,7 +90,6 @@ class Graph_PyQtGraph(QtGui.QWidget):
         splitter.addWidget(frame)
         hbox.addWidget(splitter)
         self.setLayout(hbox)
-        #self.legend = self.pw.addLegend()
         self.tracelist.itemChanged.connect(self.checkboxChanged)
         self.pw.plot([],[])
         vb = self.pw.plotItem.vb
@@ -114,13 +113,13 @@ class Graph_PyQtGraph(QtGui.QWidget):
         left_axis = self.pw.plotItem.getAxis("left")
         left_axis.tickFont = font
         left_axis.setWidth(font_size * 7)
-        left_axis.setStyle(tickTextOffset=font_size/2)
+        left_axis.setStyle(tickTextOffset=int(font_size/2))
         left_axis.setStyle(textFillLimits=[(0, 0.6), (2, 0.4),
                                            (4, 0.2), (6, 0.0)])
         bottom_axis = self.pw.plotItem.getAxis("bottom")
         bottom_axis.tickFont = font
         bottom_axis.setHeight(font_size * 2)
-        bottom_axis.setStyle(tickTextOffset=font_size/2)
+        bottom_axis.setStyle(tickTextOffset=int(font_size/2))
         bottom_axis.setStyle(textFillLimits=[(0, 0.6), (2, 0.4),
                                              (4, 0.2), (6, 0.0)])
 
@@ -134,7 +133,7 @@ class Graph_PyQtGraph(QtGui.QWidget):
         return color_dict[color]
 
     def update_figure(self):
-        for ident, params in self.artists.iteritems():
+        for ident, params in self.artists.items():
             if params.shown:
                 try:
                     ds = params.dataset
@@ -160,7 +159,7 @@ class Graph_PyQtGraph(QtGui.QWidget):
         no_points is an override parameter to the global show_points setting.
         It is to allow data fits to be plotted without points
         '''
-        new_color = self.colorChooser.next()
+        new_color = next(self.colorChooser)
         ident = self._check_artist_exist(ident)
         if self.show_points and not no_points:
             line = self.pw.plot([], [], symbol='o', symbolBrush=self.getItemColor(new_color),
@@ -176,7 +175,6 @@ class Graph_PyQtGraph(QtGui.QWidget):
         try:
             artist = self.artists[ident].artist
             self.pw.removeItem(artist)
-            #self.legend.removeItem(ident)
             self.tracelist.removeTrace(ident)
             self.artists[ident].shown = False
             try:
@@ -184,7 +182,7 @@ class Graph_PyQtGraph(QtGui.QWidget):
             except KeyError:
                 pass
         except:
-            print "remove failed"
+            print("remove failed")
 
     def display(self, ident, shown):
         try:
@@ -200,7 +198,7 @@ class Graph_PyQtGraph(QtGui.QWidget):
             raise Exception('404 Artist not found')
 
     def checkboxChanged(self):
-        for ident, item in self.tracelist.trace_dict.iteritems():
+        for ident, item in self.tracelist.trace_dict.items():
             try:
                 if item.checkState() and not self.artists[ident].shown:
                     self.display(ident, True)
@@ -219,7 +217,7 @@ class Graph_PyQtGraph(QtGui.QWidget):
     def add_dataset(self, dataset):
         try:
             self.dataset_queue.put(dataset, block=False)
-        except Queue.Full:
+        except queue.Full:
             remove_ds = self.dataset_queue.get()
             self.remove_dataset(remove_ds)
             self.dataset_queue.put(dataset, block=False)
@@ -241,7 +239,6 @@ class Graph_PyQtGraph(QtGui.QWidget):
         self.pw.setYRange(limits[0],limits[1])
 
     def mouseMoved(self, pos):
-        #print "Image position:", self.img.mapFromScene(pos)
         pnt = self.img.mapFromScene(pos)
         string = '(' + str(pnt.x()) + ' , ' + str(pnt.y()) + ')'
         self.coords.setText(string)
@@ -273,13 +270,3 @@ class Graph_PyQtGraph(QtGui.QWidget):
         units = param.units
         val = self.U(val, units)
         yield self.pv.set_parameter(self.hline_param[0], self.hline_param[1], val)
-
-if __name__ == '__main__':
-    app = QtGui.QApplication(sys.argv)
-    import qt4reactor
-    qt4reactor.install()
-    from twisted.internet import reactor
-    main = Graph_PyQtGraph('example', reactor)
-    main.show()
-    #sys.exit(app.exec_())
-    reactor.run()

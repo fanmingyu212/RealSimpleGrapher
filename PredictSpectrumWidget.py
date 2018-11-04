@@ -1,12 +1,7 @@
-# import qt4reactor
-# qt4reactor.install()
-from PyQt4 import QtGui, QtCore
+from PyQt5 import QtGui, QtWidgets
 from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock, Deferred
 from fractions import Fraction
-# from labrad import units as U
-# from labrad.units import WithUnit
 import numpy as np
-# from common.abstractdevices.SD_tracker.SD_calculator import Transitions_SD as tracker 
 
 class ParamInfo():
     '''
@@ -16,7 +11,7 @@ class ParamInfo():
     def __init__(self, value):
         self.value = value
 
-class PredictSpectrum(QtGui.QWidget):
+class PredictSpectrum(QtWidgets.QWidget):
 
     def __init__(self, parent):
         super(PredictSpectrum, self).__init__()
@@ -29,31 +24,31 @@ class PredictSpectrum(QtGui.QWidget):
 
     def initUI(self):
         self.setWindowTitle(self.ident)
-        mainLayout = QtGui.QVBoxLayout()
-        buttons = QtGui.QHBoxLayout()
+        mainLayout = QtWidgets.QVBoxLayout()
+        buttons = QtWidgets.QHBoxLayout()
 
-        self.parameterTable = QtGui.QTableWidget()
+        self.parameterTable = QtWidgets.QTableWidget()
         self.parameterTable.setColumnCount(2)
 
-        self.plotButton = QtGui.QPushButton('Plot', self)
+        self.plotButton = QtWidgets.QPushButton('Plot', self)
 
         mainLayout.addWidget(self.parameterTable)
         mainLayout.addLayout(buttons)
         buttons.addWidget(self.plotButton)
 
-        self.OPpos = QtGui.QCheckBox("Positive Manifold")
+        self.OPpos = QtWidgets.QCheckBox("Positive Manifold")
         self.OPpos.setChecked(True)
         mainLayout.addWidget(self.OPpos)
-        self.OPneg = QtGui.QCheckBox("Negative Manifold")
+        self.OPneg = QtWidgets.QCheckBox("Negative Manifold")
         self.OPneg.setChecked(True)
         mainLayout.addWidget(self.OPneg)
-        self.deltam0 = QtGui.QCheckBox("Delta m=0")
+        self.deltam0 = QtWidgets.QCheckBox("Delta m=0")
         self.deltam0.setChecked(True)
         mainLayout.addWidget(self.deltam0)
-        self.deltam1 = QtGui.QCheckBox("Delta m=1")
+        self.deltam1 = QtWidgets.QCheckBox("Delta m=1")
         self.deltam1.setChecked(True)
         mainLayout.addWidget(self.deltam1)
-        self.deltam2 = QtGui.QCheckBox("Delta m=2")
+        self.deltam2 = QtWidgets.QCheckBox("Delta m=2")
         self.deltam2.setChecked(True)
         mainLayout.addWidget(self.deltam2)
 
@@ -67,7 +62,7 @@ class PredictSpectrum(QtGui.QWidget):
 
         self.parameterTable.clear()
         
-        headerLabels = QtCore.QStringList(['Parameter', 'Value'])
+        headerLabels = ['Parameter', 'Value']
         self.parameterTable.setHorizontalHeaderLabels(headerLabels)
         self.parameterTable.horizontalHeader().setStretchLastSection(True)
 
@@ -75,8 +70,8 @@ class PredictSpectrum(QtGui.QWidget):
         self.parameterTable.setRowCount(len(params))
         for i,p in enumerate(params):
 
-            label = QtGui.QLabel(p)
-            value = QtGui.QDoubleSpinBox()
+            label = QtWidgets.QLabel(p)
+            value = QtWidgets.QDoubleSpinBox()
 
             self.value_dict[p] = ParamInfo(value)
 
@@ -88,66 +83,66 @@ class PredictSpectrum(QtGui.QWidget):
             self.parameterTable.setCellWidget(i, 1, value)   
 
     def generate_spectrum(self):  
-            ##must be in gauss and MHz!!
-            b_field = self.value_dict['B Field'].value.value()
-            line_center = self.value_dict['Line Center'].value.value()
-            mode_1 = self.value_dict['Mode 1 Freq'].value.value()
-            order1 = int(self.value_dict['Orders1'].value.value())
-            mode_2 = self.value_dict['Mode 2 Freq'].value.value()
-            order2 = int(self.value_dict['Orders2'].value.value())
-            mode_3 = self.value_dict['Mode 3 Freq'].value.value()
-            order3 = int(self.value_dict['Orders3'].value.value())
-            drive_freq = self.value_dict['Drive Frequency'].value.value()
-            micromotion = int(self.value_dict['Micromotion'].value.value())
+        ##must be in gauss and MHz!!
+        b_field = self.value_dict['B Field'].value.value()
+        line_center = self.value_dict['Line Center'].value.value()
+        mode_1 = self.value_dict['Mode 1 Freq'].value.value()
+        order1 = int(self.value_dict['Orders1'].value.value())
+        mode_2 = self.value_dict['Mode 2 Freq'].value.value()
+        order2 = int(self.value_dict['Orders2'].value.value())
+        mode_3 = self.value_dict['Mode 3 Freq'].value.value()
+        order3 = int(self.value_dict['Orders3'].value.value())
+        drive_freq = self.value_dict['Drive Frequency'].value.value()
+        micromotion = int(self.value_dict['Micromotion'].value.value())
 
-            all_carriers = self.Ca_data.get_transition_energies(b_field*1e-4,line_center) #to Tesla and MHz
+        all_carriers = self.Ca_data.get_transition_energies(b_field*1e-4,line_center) #to Tesla and MHz
 
-            print all_carriers
+        print(all_carriers)
 
-            #choose which carriers to include
-            included_lines = []
-            if self.OPneg.isChecked() == True:
-                included_lines.extend([el for el in all_carriers if el[0][1] == '-'])
-            if self.OPpos.isChecked() == True:
-                included_lines.extend([el for el in all_carriers if el[0][1] == '+'])
+        #choose which carriers to include
+        included_lines = []
+        if self.OPneg.isChecked() == True:
+            included_lines.extend([el for el in all_carriers if el[0][1] == '-'])
+        if self.OPpos.isChecked() == True:
+            included_lines.extend([el for el in all_carriers if el[0][1] == '+'])
 
-            final_lines =[]
-            if self.deltam0.isChecked() == True:
-                final_lines.extend([el for el in included_lines if np.abs(float(el[0][1:3])-float(el[0][6:8])) == 0])
-            if self.deltam1.isChecked() == True:
-                final_lines.extend([el for el in included_lines if np.abs(float(el[0][1:3])-float(el[0][6:8])) == 2])
-            if self.deltam2.isChecked() == True:
-                final_lines.extend([el for el in included_lines if np.abs(float(el[0][1:3])-float(el[0][6:8])) == 4])
+        final_lines =[]
+        if self.deltam0.isChecked() == True:
+            final_lines.extend([el for el in included_lines if np.abs(float(el[0][1:3])-float(el[0][6:8])) == 0])
+        if self.deltam1.isChecked() == True:
+            final_lines.extend([el for el in included_lines if np.abs(float(el[0][1:3])-float(el[0][6:8])) == 2])
+        if self.deltam2.isChecked() == True:
+            final_lines.extend([el for el in included_lines if np.abs(float(el[0][1:3])-float(el[0][6:8])) == 4])
 
-            carriers = [carrier[1] for carrier in final_lines]
-            sideband_orders = [[i,j,k] for i in range(-order1,order1+1) for j in range(-order2,order2+1) for k in range(-order3,order3+1)]
-            sideband_freqs = [mode_1,mode_2,mode_3]
+        carriers = [carrier[1] for carrier in final_lines]
+        sideband_orders = [[i,j,k] for i in range(-order1,order1+1) for j in range(-order2,order2+1) for k in range(-order3,order3+1)]
+        sideband_freqs = [mode_1,mode_2,mode_3]
 
 
-            #add all secular sidebands
-            all_lines = []
-            for freq in carriers:
-                for el in sideband_orders:
-                    all_lines.append(((freq + sum(np.multiply(el,sideband_freqs))),sum(np.abs(el))))
+        #add all secular sidebands
+        all_lines = []
+        for freq in carriers:
+            for el in sideband_orders:
+                all_lines.append(((freq + sum(np.multiply(el,sideband_freqs))),sum(np.abs(el))))
 
-            #add driven sidebands
-            if micromotion:
-                micro_lines = []
-                for el in all_lines:
-                    freq,order = el
-                    micro_lines.append((freq+drive_freq,0.5+order))
-                    micro_lines.append((freq-drive_freq,0.5+order))
-                all_lines.extend(micro_lines)
+        #add driven sidebands
+        if micromotion:
+            micro_lines = []
+            for el in all_lines:
+                freq,order = el
+                micro_lines.append((freq+drive_freq,0.5+order))
+                micro_lines.append((freq-drive_freq,0.5+order))
+            all_lines.extend(micro_lines)
 
-            freqs = np.arange(-50,50,0.005)
-            spec = np.zeros_like(freqs)
-            for line in all_lines:
-                spec = np.add(spec,self.make_gaussian(line[0],freqs,line[1]))
-            data = np.zeros((len(freqs), 2))
-            data[:,0] = freqs
-            data[:,1] = spec
-            
-            return data
+        freqs = np.arange(-50,50,0.005)
+        spec = np.zeros_like(freqs)
+        for line in all_lines:
+            spec = np.add(spec,self.make_gaussian(line[0],freqs,line[1]))
+        data = np.zeros((len(freqs), 2))
+        data[:,0] = freqs
+        data[:,1] = spec
+        
+        return data
 
     def make_gaussian(self,center,freqs,amplitude):
         #takes a center and makes a guassian around that point
@@ -207,7 +202,7 @@ class EnergyLevel(object):
         J = total_angular_momentum_j
         lande_factor =  self.lande_factor(S, L, J)
         #sublevels are found, 2* self.J is always an integer, so can use numerator
-        self.sublevels_m =  [-J + i for i in xrange( 1 + (2 * J).numerator)]
+        self.sublevels_m =  [-J + i for i in range( 1 + (2 * J).numerator)]
         self.energy_scale = (lande_factor * 9.274e-24 / 6.626e-34) #1.4 MHz / gauss
     
     def lande_factor(self, S, L ,J):

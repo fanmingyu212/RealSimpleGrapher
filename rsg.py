@@ -4,10 +4,10 @@ The Real Simple Grapher
 
 from GraphWindow import GraphWindow
 from Dataset import Dataset
-from PyQt4 import QtGui
+from PyQt5 import QtGui, QtWidgets
 a = QtGui.QApplication( [])
-import qt4reactor
-qt4reactor.install()
+import qt5reactor
+qt5reactor.install()
 #import server libraries
 from twisted.internet.defer import returnValue, DeferredLock, Deferred, inlineCallbacks
 from twisted.internet.threads import deferToThread

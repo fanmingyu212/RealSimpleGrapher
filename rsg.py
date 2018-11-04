@@ -5,7 +5,7 @@ The Real Simple Grapher
 from GraphWindow import GraphWindow
 from Dataset import Dataset
 from PyQt5 import QtGui, QtWidgets
-a = QtGui.QApplication( [])
+a = QtGui.QApplication([])
 import qt5reactor
 qt5reactor.install()
 #import server libraries
@@ -81,4 +81,6 @@ class RealSimpleGrapher(LabradServer):
 
 if __name__ == '__main__':
     from labrad import util
+    import sys, tempfile, os
+    sys.stdout = open(os.path.join(tempfile.gettempdir(), "log.txt"), "w")
     util.runServer(RealSimpleGrapher())

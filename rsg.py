@@ -82,5 +82,5 @@ class RealSimpleGrapher(LabradServer):
 if __name__ == '__main__':
     from labrad import util
     import sys, tempfile, os
-    sys.stdout = open(os.path.join(tempfile.gettempdir(), "log.txt"), "w")
+    #sys.stdout = open(os.path.join(tempfile.gettempdir(), "log.txt"), "w")
     util.runServer(RealSimpleGrapher())

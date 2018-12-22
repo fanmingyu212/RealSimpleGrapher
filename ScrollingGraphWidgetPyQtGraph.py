@@ -6,6 +6,7 @@ class ScrollingGraph_PyQtGraph(Graph):
         super(ScrollingGraph_PyQtGraph, self).__init__(name, reactor, parent)
         self.set_xlimits([0, 100])
         self.pointsToKeep = 100
+        self._mouse_pressed = False
 
     def update_figure(self, _input = None):
         for ident, params in self.artists.items():
@@ -19,9 +20,8 @@ class ScrollingGraph_PyQtGraph(Graph):
                     pass
 
         try:
-            mousepressed = QtGui.qApp.mouseButtons()
-            if (mousepressed == QtCore.Qt.LeftButton) or (mousepressed == QtCore.Qt.RightButton):
-                return 
+            if self._mouse_pressed:
+                return
                 # see if we need to redraw
             xmin_cur, xmax_cur = self.current_limits
             x_cur = x[-1] # current largest x value
@@ -32,5 +32,16 @@ class ScrollingGraph_PyQtGraph(Graph):
                 xmin = xmin_cur + shift
                 xmax = xmax_cur + shift
                 self.set_xlimits( [xmin, xmax] )
-        except:
+        except Exception as e:
             pass
+
+    #def mousePressEvent(self, mouse_event):
+    #    print("AAAAAAAAAAAAA")
+    #    if (mouse_event.button() == QtCore.Qt.LeftButton) or (mouse_event.button() == QtCore.Qt.RightButton):
+    #        self._mouse_pressed = True
+    #    #super(ScrollingGraph_PyQtGraph, self).mousePressEvent(mouse_event)
+    #
+    #def mouseReleaseEvent(self, mouse_event):
+    #    print("BBBBBBBBBBBBB")
+    #    self._mouse_pressed = False
+    #    #super(ScrollingGraph_PyQtGraph, self).mouseReleaseEvent(mouse_event)

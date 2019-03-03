@@ -1,5 +1,6 @@
 from GraphWidgetPyQtGraph import Graph_PyQtGraph as Graph
 from PyQt5 import QtGui, QtCore, QtWidgets
+import numpy
 
 class ScrollingGraph_PyQtGraph(Graph):
     def __init__(self, name, reactor, parent = None, ylim=[0,1], cxn=None):
@@ -9,15 +10,7 @@ class ScrollingGraph_PyQtGraph(Graph):
         self._mouse_pressed = False
 
     def update_figure(self, _input = None):
-        for ident, params in self.artists.items():
-            if params.shown:
-                try:
-                    index = params.index
-                    x = params.dataset.data[:,0]
-                    y = params.dataset.data[:,index+1]
-                    params.artist.setData(x,y)
-                except:
-                    pass
+        super(ScrollingGraph_PyQtGraph, self).update_figure()
 
         try:
             if self._mouse_pressed:

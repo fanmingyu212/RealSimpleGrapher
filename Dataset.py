@@ -5,12 +5,14 @@ from twisted.internet.defer import inlineCallbacks, returnValue, DeferredLock, D
 from PyQt5 import QtCore, QtWidgets
 from twisted.internet.threads import deferToThread
 import numpy as np
+import time
+from Data import Data
 
 class Dataset(QtCore.QObject):
     
     def __init__(self, data_vault, context, dataset_location,reactor):
         super(Dataset, self).__init__()
-        self.data = None
+        self.data = Data(10000)
         self.accessingData = DeferredLock()
         self.reactor = reactor
         self.dataset_location = dataset_location
@@ -52,21 +54,12 @@ class Dataset(QtCore.QObject):
 
     @inlineCallbacks
     def getData(self):
-        Data = yield self.data_vault.get(100, context = self.context)
-        if (self.data is None):
-            yield self.accessingData.acquire()
-            try:
-                self.data = Data.asarray
-            except:
-                self.data = Data
-            self.accessingData.release()
-        else:
-            yield self.accessingData.acquire()
-            try:
-                self.data = np.append(self.data, Data.asarray, 0)
-            except:
-                self.data = np.append(self.data, Data, 0)
-            self.accessingData.release()
+        time_now = time.time()
+        data = yield self.data_vault.get(100, context = self.context)
+        yield self.accessingData.acquire()
+        self.data.add_data(data)
+        self.accessingData.release()
+        #print("data: {0:.3f}".format((time.time() - time_now)*1e3))
 
     @inlineCallbacks
     def getLabels(self):

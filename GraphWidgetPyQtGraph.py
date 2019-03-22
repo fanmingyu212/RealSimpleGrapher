@@ -10,7 +10,6 @@ import queue
 
 import numpy as np
 from numpy import random
-import time
 
 class artistParameters():
     def __init__(self, artist, dataset, index, shown):
@@ -134,8 +133,6 @@ class Graph_PyQtGraph(QtWidgets.QWidget):
         return color_dict[color]
 
     def update_figure(self):
-        time_now = time.time()
-        is_run = False
         for ident, params in self.artists.items():
             if params.shown:
                 try:
@@ -143,17 +140,11 @@ class Graph_PyQtGraph(QtWidgets.QWidget):
                     index = params.index
                     current_update = ds.updateCounter
                     if params.last_update < current_update:
-                        is_run = True
+                        x = ds.data[:,0]
+                        y = ds.data[:,index+1]
                         params.last_update = current_update
-                        x = ds.data.row(0)
-                        y = ds.data.row(index+1)
                         params.artist.setData(x,y)
-                except Exception as e:
-                    print(e)
-        if is_run:
-            self.live_update_loop.stop()
-            self.live_update_loop.start(time.time() - time_now)
-        #print("graph: {0:.3f}".format((time.time() - time_now)*1e3))
+                except: pass
 
     def _check_artist_exist(self, ident):
         if ident in self.artists.keys():
